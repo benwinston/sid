@@ -1,0 +1,18 @@
+{
+  "name": "sid",
+  "version": "0.1.0",
+  "description": "Local-first UI for searching iMessage history",
+  "license": "MIT",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "privacy-check": "sh scripts/privacy-check.sh"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.3.0",
+    "express": "^4.19.2"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

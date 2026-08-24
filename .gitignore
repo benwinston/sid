@@ -1,0 +1,19 @@
+# Private local data — never commit
+cache.db
+cache.db-*
+*.db-wal
+*.db-shm
+
+# Dependencies and local tooling
+node_modules/
+.DS_Store
+.env
+.env.*
+!.env.example
+npm-debug.log*
+
+# Logs, coverage, and editor state
+*.log
+coverage/
+.idea/
+.vscode/

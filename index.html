@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sid</title>
+<style>
+  :root {
+    --bg: #0b0c0e;
+    --bg-elev: #131519;
+    --bg-elev2: #1a1d22;
+    --border: #24282f;
+    --border-soft: #1d2027;
+    --fg: #e6e8ec;
+    --fg-muted: #8b93a1;
+    --fg-dim: #5a6270;
+    --accent: #7aa2f7;
+    --accent-dim: #3d5a99;
+    --warn: #e0af68;
+    --sent: #9ece6a;
+    --recv: #7dcfff;
+    --mark-bg: #3d5a99;
+    --mark-fg: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", system-ui, sans-serif;
+    font-size: 13px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+  .mono {
+    font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12px;
+  }
+  a { color: var(--accent); text-decoration: none; }
+
+  header {
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .header-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 14px 20px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .title {
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: 0.01em;
+  }
+  .title::after {
+    content: '';
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    margin-left: 8px;
+    vertical-align: middle;
+    opacity: 0.8;
+  }
+  .status {
+    font-size: 12px;
+    color: var(--fg-muted);
+    margin-left: auto;
+    display: flex; gap: 14px; align-items: center;
+  }
+  .status .count { color: var(--fg); }
+  .status .last { color: var(--fg-muted); }
+  button {
+    background: var(--bg-elev2);
+    color: var(--fg);
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    font-size: 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.1s, border 0.1s;
+  }
+  button:hover:not(:disabled) {
+    background: #222730;
+    border-color: #2f3540;
+  }
+  button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  button.primary {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: #fff;
+  }
+  button.primary:hover:not(:disabled) {
+    background: #496bb1;
+  }
+
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  .filters {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px;
+    margin-bottom: 16px;
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr auto;
+    gap: 10px;
+    align-items: end;
+  }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field label {
+    font-size: 11px;
+    color: var(--fg-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  input[type="text"], input[type="date"], input[type="number"], select {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--fg);
+    padding: 7px 10px;
+    font-size: 13px;
+    border-radius: 5px;
+    font-family: inherit;
+    outline: none;
+    transition: border 0.1s;
+  }
+  input[type="text"]:focus, input[type="date"]:focus, input[type="number"]:focus, select:focus {
+    border-color: var(--accent);
+  }
+  .direction-group {
+    display: flex;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  .direction-group button {
+    flex: 1;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    padding: 7px 0;
+    font-size: 12px;
+    color: var(--fg-muted);
+  }
+  .direction-group button.active {
+    background: var(--accent-dim);
+    color: #fff;
+  }
+  .direction-group button + button {
+    border-left: 1px solid var(--border);
+  }
+  .direction-group button.active + button,
+  .direction-group button + button.active {
+    border-left-color: var(--accent);
+  }
+
+  .meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: var(--fg-muted);
+    margin-bottom: 10px;
+    padding: 0 2px;
+  }
+  .meta-row .hint { color: var(--fg-dim); }
+  .meta-row .hint kbd {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-size: 11px;
+    font-family: inherit;
+    color: var(--fg-muted);
+  }
+
+  .results { display: flex; flex-direction: column; gap: 6px; }
+  .msg {
+    background: var(--bg-elev);
+    border: 1px solid var(--border-soft);
+    border-radius: 5px;
+    padding: 10px 12px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 12px;
+    align-items: start;
+  }
+  .msg-meta {
+    display: flex; flex-direction: column; gap: 2px;
+    min-width: 180px;
+    max-width: 220px;
+  }
+  .msg-date { color: var(--fg-muted); }
+  .msg-handle { color: var(--fg); }
+  .msg-handle.sent { color: var(--sent); }
+  .msg-handle.recv { color: var(--recv); }
+  .msg-chat {
+    color: var(--fg-dim);
+    font-size: 11px;
+    font-style: italic;
+  }
+  .msg-body {
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: var(--fg);
+  }
+  mark {
+    background: var(--mark-bg);
+    color: var(--mark-fg);
+    padding: 0 2px;
+    border-radius: 2px;
+  }
+  .empty {
+    text-align: center;
+    color: var(--fg-dim);
+    padding: 60px 20px;
+    font-size: 13px;
+  }
+  .banner {
+    background: var(--bg-elev);
+    border: 1px solid var(--warn);
+    color: var(--warn);
+    border-radius: 5px;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+    font-size: 12px;
+  }
+  .spinner {
+    display: inline-block;
+    width: 11px; height: 11px;
+    border: 2px solid var(--fg-dim);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: -2px;
+    margin-right: 6px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Clickable timestamp link in results */
+  .msg-date-link {
+    color: var(--fg-muted);
+    text-decoration: none;
+    border-bottom: 1px dashed transparent;
+    cursor: pointer;
+    transition: color 0.1s, border-color 0.1s;
+    display: inline-block;
+    background: none;
+    padding: 0;
+    border-left: 0;
+    border-right: 0;
+    border-top: 0;
+    font: inherit;
+  }
+  .msg-date-link:hover {
+    color: var(--fg);
+    border-bottom-color: var(--fg-muted);
+  }
+  .msg-date-link:focus-visible {
+    outline: 1px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  /* Thread pane (right drawer) */
+  .scrim {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+    z-index: 50;
+  }
+  .scrim.open { opacity: 1; pointer-events: auto; }
+
+  .drawer {
+    position: fixed;
+    top: 0; right: 0; bottom: 0;
+    width: min(540px, 95vw);
+    background: var(--bg-elev);
+    border-left: 1px solid var(--border);
+    box-shadow: -8px 0 30px rgba(0, 0, 0, 0.4);
+    transform: translateX(100%);
+    transition: transform 0.2s ease;
+    z-index: 60;
+    display: flex;
+    flex-direction: column;
+  }
+  .drawer.open { transform: translateX(0); }
+
+  .drawer-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--bg-elev);
+  }
+  .drawer-title {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--fg);
+  }
+  .drawer-sub {
+    font-size: 11px;
+    color: var(--fg-muted);
+    font-weight: 400;
+    margin-top: 2px;
+  }
+  .drawer-title-wrap {
+    flex: 1;
+    min-width: 0;
+  }
+  .drawer-close {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--fg-muted);
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .drawer-close:hover { color: var(--fg); background: var(--bg-elev2); }
+
+  .drawer-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px 14px 20px;
+    scroll-behavior: auto;
+  }
+
+  .thread-loading {
+    color: var(--fg-dim);
+    font-size: 12px;
+    text-align: center;
+    padding: 20px 10px;
+  }
+  .thread-end {
+    color: var(--fg-dim);
+    font-size: 11px;
+    text-align: center;
+    padding: 10px;
+    font-style: italic;
+  }
+
+  .tmsg {
+    padding: 6px 10px 6px 12px;
+    margin: 2px 0;
+    border-left: 3px solid transparent;
+    border-radius: 3px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+  .tmsg-head {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--fg-muted);
+  }
+  .tmsg-from {
+    font-weight: 500;
+  }
+  .tmsg-from.sent { color: var(--sent); }
+  .tmsg-from.recv { color: var(--recv); }
+  .tmsg-time {
+    color: var(--fg-dim);
+    font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+    font-size: 11px;
+  }
+  .tmsg-body {
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: var(--fg);
+    font-size: 13px;
+    line-height: 1.4;
+  }
+  .tmsg.anchor {
+    border-left-color: var(--recv);
+    background: rgba(125, 207, 255, 0.06);
+  }
+
+  @media (max-width: 780px) {
+    .filters { grid-template-columns: 1fr 1fr; }
+    .msg { grid-template-columns: 1fr; }
+    .msg-meta { max-width: none; flex-direction: row; gap: 10px; flex-wrap: wrap; }
+    .drawer { width: 100vw; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="title">Sid</div>
+    <div class="status">
+      <span class="count mono" id="countLabel">— messages</span>
+      <span class="last mono" id="lastLabel">Last synced: never</span>
+      <button id="syncBtn" class="primary">Pull latest</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div id="banner"></div>
+
+  <div class="filters">
+    <div class="field">
+      <label for="textInput">Text</label>
+      <input id="textInput" type="text" placeholder="search message body" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="field">
+      <label for="fromInput">From</label>
+      <input id="fromInput" type="text" placeholder="name / phone / email" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="field">
+      <label>Direction</label>
+      <div class="direction-group" id="dirGroup">
+        <button type="button" data-dir="both" class="active">Both</button>
+        <button type="button" data-dir="sent">Sent</button>
+        <button type="button" data-dir="received">Received</button>
+      </div>
+    </div>
+    <div class="field">
+      <label for="afterInput">After</label>
+      <input id="afterInput" type="date">
+    </div>
+    <div class="field">
+      <label for="beforeInput">Before</label>
+      <input id="beforeInput" type="date">
+    </div>
+    <div class="field">
+      <label for="limitInput">Limit</label>
+      <input id="limitInput" type="number" value="100" min="1" max="1000">
+    </div>
+  </div>
+
+  <div class="meta-row">
+    <div id="resultCount">Ready.</div>
+    <div class="hint">
+      <kbd>/</kbd> focus search &nbsp;
+      <kbd>Esc</kbd> clear filters &nbsp;
+      <kbd>Enter</kbd> run search
+    </div>
+  </div>
+
+  <div id="results" class="results"></div>
+</main>
+
+<div class="scrim" id="scrim" aria-hidden="true"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" aria-hidden="true">
+  <div class="drawer-header">
+    <div class="drawer-title-wrap">
+      <div class="drawer-title" id="drawerTitle">Thread</div>
+      <div class="drawer-sub" id="drawerSub"></div>
+    </div>
+    <button class="drawer-close" id="drawerCloseBtn" type="button">Close</button>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
+</aside>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const textInput = $('textInput');
+  const fromInput = $('fromInput');
+  const afterInput = $('afterInput');
+  const beforeInput = $('beforeInput');
+  const limitInput = $('limitInput');
+  const dirGroup = $('dirGroup');
+  const resultsEl = $('results');
+  const resultCount = $('resultCount');
+  const syncBtn = $('syncBtn');
+  const countLabel = $('countLabel');
+  const lastLabel = $('lastLabel');
+  const banner = $('banner');
+
+  let direction = 'both';
+  let debounceTimer = null;
+  let currentSearchId = 0;
+
+  function escapeHtml(s) {
+    return String(s || '').replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[c]);
+  }
+
+  function highlight(text, query) {
+    const safe = escapeHtml(text);
+    if (!query) return safe;
+    const q = query.trim();
+    if (!q) return safe;
+    // escape regex
+    const re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+    return safe.replace(re, m => `<mark>${m}</mark>`);
+  }
+
+  function formatDate(iso) {
+    // Show in PT (America/Los_Angeles)
+    const d = new Date(iso);
+    return d.toLocaleString('en-US', {
+      timeZone: 'America/Los_Angeles',
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', second: '2-digit',
+      hour12: false
+    }).replace(',', '');
+  }
+
+  function renderResults(rows, query) {
+    if (!rows.length) {
+      resultsEl.innerHTML = '<div class="empty">No messages match these filters.</div>';
+      return;
+    }
+    const html = rows.map(r => {
+      const dir = r.is_from_me ? 'sent' : 'recv';
+      const arrow = r.is_from_me ? '\u2192 me' : `\u2190 ${escapeHtml(r.sender_handle || 'unknown')}`;
+      const chat = r.chat_name ? `<div class="msg-chat">[${escapeHtml(r.chat_name)}]</div>` : '';
+      const dateLabel = escapeHtml(formatDate(r.date_iso));
+      // Only make timestamp clickable when we have a chat_guid to pivot on.
+      const dateHtml = r.chat_guid
+        ? `<button type="button" class="msg-date-link mono" data-chat-guid="${escapeHtml(r.chat_guid)}" data-anchor-rowid="${escapeHtml(String(r.rowid))}" data-anchor-date-ns="${escapeHtml(String(r.date_ns))}" title="Open surrounding conversation">${dateLabel}</button>`
+        : `<div class="msg-date">${dateLabel}</div>`;
+      return `
+        <div class="msg">
+          <div class="msg-meta mono">
+            ${dateHtml}
+            <div class="msg-handle ${dir}">${arrow}</div>
+            ${chat}
+          </div>
+          <div class="msg-body">${highlight(r.text, query)}</div>
+        </div>
+      `;
+    }).join('');
+    resultsEl.innerHTML = html;
+  }
+
+  async function runSearch() {
+    const id = ++currentSearchId;
+    const params = new URLSearchParams();
+    if (textInput.value.trim()) params.set('text', textInput.value.trim());
+    if (fromInput.value.trim()) params.set('from', fromInput.value.trim());
+    if (direction === 'sent') params.set('sent', '1');
+    if (direction === 'received') params.set('received', '1');
+    if (afterInput.value) params.set('after', afterInput.value);
+    if (beforeInput.value) params.set('before', beforeInput.value);
+    if (limitInput.value) params.set('limit', limitInput.value);
+
+    resultCount.textContent = 'Searching...';
+    try {
+      const res = await fetch('/api/search?' + params.toString());
+      const data = await res.json();
+      if (id !== currentSearchId) return; // stale
+      if (!res.ok) {
+        resultCount.textContent = 'Error: ' + (data.error || res.status);
+        resultsEl.innerHTML = '';
+        return;
+      }
+      resultCount.textContent = `${data.count} result${data.count === 1 ? '' : 's'}`;
+      renderResults(data.results, textInput.value.trim());
+    } catch (err) {
+      if (id !== currentSearchId) return;
+      resultCount.textContent = 'Error: ' + err.message;
+      resultsEl.innerHTML = '';
+    }
+  }
+
+  function debouncedSearch() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(runSearch, 300);
+  }
+
+  function formatLastSynced(iso) {
+    if (!iso) return 'Last synced: never';
+    const d = new Date(iso);
+    return 'Last synced: ' + d.toLocaleString('en-US', {
+      timeZone: 'America/Los_Angeles',
+      month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit',
+      hour12: false
+    }).replace(',', '');
+  }
+
+  async function loadStatus() {
+    try {
+      const res = await fetch('/api/status');
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || res.status);
+      countLabel.textContent = `${data.messageCount.toLocaleString()} messages`;
+      lastLabel.textContent = formatLastSynced(data.lastSynced);
+      if (data.firstSync) {
+        banner.innerHTML = 'First sync has not been run yet. Click "Pull latest" to import your message history. The first sync may take 30-60 seconds.';
+      } else {
+        banner.innerHTML = '';
+      }
+      return data;
+    } catch (err) {
+      banner.innerHTML = 'Could not load status: ' + escapeHtml(err.message);
+    }
+  }
+
+  async function doSync() {
+    const status = await loadStatus();
+    const firstSync = status && status.firstSync;
+    syncBtn.disabled = true;
+    const origLabel = syncBtn.textContent;
+    syncBtn.innerHTML = '<span class="spinner"></span>Syncing...';
+    if (firstSync) {
+      banner.innerHTML = '<span class="spinner"></span>First sync in progress. This may take 30-60 seconds for a large message history. Do not close the tab.';
+    } else {
+      resultCount.textContent = 'Syncing...';
+    }
+    try {
+      const res = await fetch('/api/sync', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || res.status);
+      countLabel.textContent = `${data.messageCount.toLocaleString()} messages`;
+      lastLabel.textContent = formatLastSynced(data.lastSynced);
+      banner.innerHTML = '';
+      resultCount.textContent = data.newCount > 0
+        ? `Synced ${data.newCount.toLocaleString()} new message${data.newCount === 1 ? '' : 's'}.`
+        : 'Already up to date.';
+      await runSearch();
+    } catch (err) {
+      banner.innerHTML = 'Sync failed: ' + escapeHtml(err.message);
+      resultCount.textContent = '';
+    } finally {
+      syncBtn.disabled = false;
+      syncBtn.textContent = origLabel;
+    }
+  }
+
+  // --- thread pane ---
+  const scrim = $('scrim');
+  const drawer = $('drawer');
+  const drawerBody = $('drawerBody');
+  const drawerTitle = $('drawerTitle');
+  const drawerSub = $('drawerSub');
+  const drawerCloseBtn = $('drawerCloseBtn');
+
+  const threadState = {
+    chatGuid: null,
+    anchorRowid: null,
+    anchorDateNs: null,
+    messages: [],          // chronological
+    hasMoreBefore: false,
+    hasMoreAfter: false,
+    loadingBefore: false,
+    loadingAfter: false,
+    lastFocused: null,
+  };
+
+  function formatTime(iso) {
+    const d = new Date(iso);
+    return d.toLocaleString('en-US', {
+      timeZone: 'America/Los_Angeles',
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit',
+      hour12: false
+    }).replace(',', '');
+  }
+
+  function msgRowHtml(m, anchorRowid) {
+    const isAnchor = String(m.rowid) === String(anchorRowid);
+    const dir = m.is_from_me ? 'sent' : 'recv';
+    const who = m.is_from_me ? 'me' : (m.sender_handle || 'unknown');
+    return `
+      <div class="tmsg${isAnchor ? ' anchor' : ''}" data-rowid="${escapeHtml(String(m.rowid))}">
+        <div class="tmsg-head">
+          <span class="tmsg-from ${dir}">${escapeHtml(who)}</span>
+          <span class="tmsg-time">${escapeHtml(formatTime(m.date_iso))}</span>
+        </div>
+        <div class="tmsg-body">${escapeHtml(m.text || '')}</div>
+      </div>
+    `;
+  }
+
+  function renderThread() {
+    const parts = [];
+    if (threadState.hasMoreBefore) {
+      parts.push('<div class="thread-loading" id="threadTopSentinel">Loading earlier messages...</div>');
+    } else {
+      parts.push('<div class="thread-end">Start of conversation</div>');
+    }
+    for (const m of threadState.messages) {
+      parts.push(msgRowHtml(m, threadState.anchorRowid));
+    }
+    if (threadState.hasMoreAfter) {
+      parts.push('<div class="thread-loading" id="threadBottomSentinel">Loading later messages...</div>');
+    } else {
+      parts.push('<div class="thread-end">End of conversation</div>');
+    }
+    drawerBody.innerHTML = parts.join('');
+  }
+
+  function scrollAnchorIntoView() {
+    const el = drawerBody.querySelector(`.tmsg[data-rowid="${CSS.escape(String(threadState.anchorRowid))}"]`);
+    if (!el) return;
+    const offset = el.offsetTop - (drawerBody.clientHeight / 2) + (el.clientHeight / 2);
+    drawerBody.scrollTop = Math.max(0, offset);
+  }
+
+  async function openThread(chatGuid, anchorRowid, anchorDateNs, triggerEl) {
+    threadState.chatGuid = chatGuid;
+    threadState.anchorRowid = anchorRowid != null ? Number(anchorRowid) : null;
+    threadState.anchorDateNs = anchorDateNs != null ? String(anchorDateNs) : null;
+    threadState.lastFocused = triggerEl || null;
+
+    drawer.classList.add('open');
+    scrim.classList.add('open');
+    drawer.setAttribute('aria-hidden', 'false');
+    scrim.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+
+    drawerTitle.textContent = 'Loading...';
+    drawerSub.textContent = '';
+    drawerBody.innerHTML = '<div class="thread-loading">Loading conversation...</div>';
+
+    const params = new URLSearchParams();
+    params.set('chat_guid', chatGuid);
+    if (anchorRowid != null) params.set('anchor_rowid', String(anchorRowid));
+    if (anchorDateNs != null) params.set('anchor_date_ns', String(anchorDateNs));
+    params.set('before', '40');
+    params.set('after', '40');
+
+    try {
+      const res = await fetch('/api/thread?' + params.toString());
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || res.status);
+
+      threadState.messages = data.messages || [];
+      threadState.hasMoreBefore = !!data.has_more_before;
+      threadState.hasMoreAfter = !!data.has_more_after;
+      if (data.anchor_rowid != null) threadState.anchorRowid = data.anchor_rowid;
+
+      const title = data.chat_name && data.chat_name.trim()
+        ? data.chat_name
+        : computeFallbackTitle(data.participants, data.chat_identifier, threadState.messages);
+      drawerTitle.textContent = title || 'Conversation';
+      const participants = Array.isArray(data.participants)
+        ? data.participants.filter(Boolean)
+        : [];
+      const participantLabel = participants.length
+        ? participants.join(', ')
+        : (data.chat_identifier || '');
+      const messageCount = `${threadState.messages.length} message${threadState.messages.length === 1 ? '' : 's'}`;
+      drawerSub.textContent = participantLabel
+        ? `${participantLabel} | ${messageCount}`
+        : messageCount;
+
+      renderThread();
+      // Let layout settle, then scroll anchor into the middle.
+      requestAnimationFrame(() => {
+        scrollAnchorIntoView();
+      });
+    } catch (err) {
+      drawerBody.innerHTML = `<div class="thread-loading">Error: ${escapeHtml(err.message)}</div>`;
+    }
+  }
+
+  function computeFallbackTitle(participants, chatIdentifier, messages) {
+    if (Array.isArray(participants) && participants.length) {
+      return participants.slice(0, 4).join(', ') + (participants.length > 4 ? ', ...' : '');
+    }
+    if (chatIdentifier) return chatIdentifier;
+
+    const handles = new Set();
+    for (const m of messages) {
+      if (m.sender_handle) handles.add(m.sender_handle);
+    }
+    if (handles.size === 0) return 'Conversation';
+    return Array.from(handles).slice(0, 4).join(', ') + (handles.size > 4 ? ', ...' : '');
+  }
+
+  function closeThread() {
+    drawer.classList.remove('open');
+    scrim.classList.remove('open');
+    drawer.setAttribute('aria-hidden', 'true');
+    scrim.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    if (threadState.lastFocused && typeof threadState.lastFocused.focus === 'function') {
+      try { threadState.lastFocused.focus(); } catch (e) { /* ignore */ }
+    }
+  }
+
+  async function loadMoreBefore() {
+    if (threadState.loadingBefore || !threadState.hasMoreBefore) return;
+    if (!threadState.messages.length) return;
+    threadState.loadingBefore = true;
+    const first = threadState.messages[0];
+    const prevScrollHeight = drawerBody.scrollHeight;
+    const prevScrollTop = drawerBody.scrollTop;
+
+    const params = new URLSearchParams();
+    params.set('chat_guid', threadState.chatGuid);
+    params.set('direction', 'before');
+    params.set('cursor_date_ns', first.date_ns);
+    params.set('cursor_rowid', String(first.rowid));
+    params.set('limit', '40');
+    try {
+      const res = await fetch('/api/thread/page?' + params.toString());
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || res.status);
+      const newMsgs = data.messages || [];
+      if (newMsgs.length) {
+        threadState.messages = newMsgs.concat(threadState.messages);
+      }
+      threadState.hasMoreBefore = !!data.has_more;
+      renderThread();
+      // Preserve viewport: new scrollHeight - old scrollHeight tells us how
+      // much content we prepended.
+      const added = drawerBody.scrollHeight - prevScrollHeight;
+      drawerBody.scrollTop = prevScrollTop + added;
+    } catch (err) {
+      // swallow; leave sentinel visible so the user can retry by scrolling
+      console.error('loadMoreBefore', err);
+    } finally {
+      threadState.loadingBefore = false;
+    }
+  }
+
+  async function loadMoreAfter() {
+    if (threadState.loadingAfter || !threadState.hasMoreAfter) return;
+    if (!threadState.messages.length) return;
+    threadState.loadingAfter = true;
+    const last = threadState.messages[threadState.messages.length - 1];
+
+    const params = new URLSearchParams();
+    params.set('chat_guid', threadState.chatGuid);
+    params.set('direction', 'after');
+    params.set('cursor_date_ns', last.date_ns);
+    params.set('cursor_rowid', String(last.rowid));
+    params.set('limit', '40');
+    try {
+      const res = await fetch('/api/thread/page?' + params.toString());
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || res.status);
+      const newMsgs = data.messages || [];
+      if (newMsgs.length) {
+        threadState.messages = threadState.messages.concat(newMsgs);
+      }
+      threadState.hasMoreAfter = !!data.has_more;
+      renderThread();
+    } catch (err) {
+      console.error('loadMoreAfter', err);
+    } finally {
+      threadState.loadingAfter = false;
+    }
+  }
+
+  drawerBody.addEventListener('scroll', () => {
+    if (!drawer.classList.contains('open')) return;
+    const nearTop = drawerBody.scrollTop < 80;
+    const nearBottom = (drawerBody.scrollHeight - drawerBody.scrollTop - drawerBody.clientHeight) < 80;
+    if (nearTop) loadMoreBefore();
+    if (nearBottom) loadMoreAfter();
+  });
+
+  scrim.addEventListener('click', closeThread);
+  drawerCloseBtn.addEventListener('click', closeThread);
+
+  resultsEl.addEventListener('click', (e) => {
+    const btn = e.target.closest('.msg-date-link');
+    if (!btn) return;
+    e.preventDefault();
+    const chatGuid = btn.dataset.chatGuid;
+    const anchorRowid = btn.dataset.anchorRowid;
+    const anchorDateNs = btn.dataset.anchorDateNs;
+    if (!chatGuid) return;
+    openThread(chatGuid, anchorRowid, anchorDateNs, btn);
+  });
+
+  // --- events ---
+  syncBtn.addEventListener('click', doSync);
+
+  [textInput, fromInput].forEach(el => el.addEventListener('input', debouncedSearch));
+  [afterInput, beforeInput, limitInput].forEach(el => el.addEventListener('change', runSearch));
+
+  dirGroup.addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    direction = btn.dataset.dir;
+    dirGroup.querySelectorAll('button').forEach(b => b.classList.toggle('active', b === btn));
+    runSearch();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    const inInput = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName);
+    const drawerOpen = drawer.classList.contains('open');
+    if (e.key === '/' && !inInput && !drawerOpen) {
+      e.preventDefault();
+      textInput.focus();
+      textInput.select();
+    } else if (e.key === 'Escape') {
+      if (drawerOpen) {
+        e.preventDefault();
+        closeThread();
+        return;
+      }
+      textInput.value = '';
+      fromInput.value = '';
+      afterInput.value = '';
+      beforeInput.value = '';
+      limitInput.value = '100';
+      direction = 'both';
+      dirGroup.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.dir === 'both'));
+      runSearch();
+    } else if (e.key === 'Enter' && inInput) {
+      clearTimeout(debounceTimer);
+      runSearch();
+    }
+  });
+
+  // --- init ---
+  (async () => {
+    await loadStatus();
+    runSearch();
+  })();
+})();
+</script>
+
+</body>
+</html>
