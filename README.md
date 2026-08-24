@@ -8,6 +8,25 @@ Nothing leaves your machine. There is no authentication, cloud service,
 telemetry, or runtime network traffic outside `localhost`. The server binds to
 `127.0.0.1`, so it is not exposed to other devices on your network.
 
+## Why Sid?
+
+Apple Messages uses partial string matching. Searching for `hi` also returns
+messages containing words such as `this`, `his`, and `hilarious`, making it
+impossible to search specifically for the word `hi`.
+
+**Apple Messages results for `hi`:**
+
+<img src="docs/images/apple-messages-hi-partial-matches-1.jpg" alt="Apple Messages returning partial matches for hi, including this and his" width="420">
+
+<img src="docs/images/apple-messages-hi-partial-matches-2.png" alt="Apple Messages returning partial matches for hi, including his and hilarious" width="420">
+
+**Sid results for `hi`:**
+
+Sid returns messages containing the word `hi`, without unrelated partial
+matches.
+
+<img src="docs/images/sid-hi-results.png" alt="Sid returning exact word matches for hi" width="760">
+
 ## Install
 
 ```bash
