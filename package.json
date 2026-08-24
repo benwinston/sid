@@ -3,9 +3,11 @@
   "version": "0.1.0",
   "description": "Local-first UI for searching iMessage history",
   "license": "MIT",
-  "main": "server.js",
+  "main": "electron-main.js",
   "scripts": {
     "start": "node server.js",
+    "desktop": "electron .",
+    "dist:mac": "electron-builder --mac dmg",
     "privacy-check": "sh scripts/privacy-check.sh"
   },
   "dependencies": {
@@ -14,5 +16,32 @@
   },
   "engines": {
     "node": ">=18"
+  },
+  "devDependencies": {
+    "electron": "^37.2.6",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.benwinston.sid",
+    "productName": "Sid",
+    "asar": true,
+    "asarUnpack": [
+      "node_modules/better-sqlite3/**"
+    ],
+    "files": [
+      "electron-main.js",
+      "server.js",
+      "index.html",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "category": "public.app-category.utilities",
+      "target": "dmg"
+    },
+    "dmg": {
+      "title": "Sid ${version}",
+      "artifactName": "Sid-${version}-${arch}.${ext}"
+    }
   }
 }

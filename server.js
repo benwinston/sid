@@ -49,7 +49,11 @@ function fromAppleNsLocal(ts) {
 
 // --- Paths ---
 const CHAT_DB = `${process.env.HOME}/Library/Messages/chat.db`;
-const CACHE_DIR = path.resolve(__dirname);
+// The packaged app stores its writable cache in Application Support.
+const CACHE_DIR = process.env.SID_DATA_DIR
+  ? path.resolve(process.env.SID_DATA_DIR)
+  : path.resolve(__dirname);
+fs.mkdirSync(CACHE_DIR, { recursive: true });
 const CACHE_DB = path.join(CACHE_DIR, 'cache.db');
 
 // --- Cache db setup ---
@@ -157,7 +161,7 @@ function setMeta(db, key, value) {
 // --- chat.db reader (read-only, immutable) ---
 function openChatDb() {
   if (!fs.existsSync(CHAT_DB)) {
-    throw new Error(`chat.db not found at ${CHAT_DB}. Grant Full Disk Access to Terminal.`);
+    throw new Error(`chat.db not found at ${CHAT_DB}. Grant Full Disk Access to Sid in System Settings.`);
   }
   try {
     const db = new Database(CHAT_DB, { readonly: true, fileMustExist: true });

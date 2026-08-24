@@ -29,8 +29,18 @@ matches.
 
 ## Install
 
+Download the latest `.dmg` from [GitHub Releases](https://github.com/benwinston/sid/releases),
+open it, and drag **Sid** into **Applications**. On first launch, grant Sid
+**Full Disk Access** in **System Settings > Privacy & Security > Full Disk Access**
+so it can read your local Messages database.
+
+The first release is not Apple-notarized. If macOS blocks it, right-click Sid
+in **Applications**, choose **Open**, then confirm **Open**.
+
+### Run from source
+
 ```bash
-git clone <repository-url> sid
+git clone https://github.com/benwinston/sid.git
 cd sid
 npm install
 ```
