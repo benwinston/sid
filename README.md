@@ -25,7 +25,7 @@ impossible to search specifically for the word `hi`.
 
 **Apple Messages results for `hi`:**
 
-<img src="docs/images/apple-messages-hi-partial-matches-1.jpg" alt="Apple Messages returning partial matches for hi, including this and his" width="420">
+<img src="docs/images/apple-messages-hi-partial-matches-1.png" alt="Apple Messages returning partial matches for hi, including this and his" width="420">
 
 <img src="docs/images/apple-messages-hi-partial-matches-2.png" alt="Apple Messages returning partial matches for hi, including his and hilarious" width="420">
 
