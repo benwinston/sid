@@ -1,5 +1,14 @@
 # Sid
 
+iMessage search that actually works.
+
+What SID can search that Apple Messages can’t:
+
+- **Strict phrases in quotes:** searching `"happy birthday"` returns only that exact phrase.
+- **Message text only:** searching a name mentioned inside a message won’t also return every conversation or group chat associated with contacts having that name.
+- Combine phrase searches with exact date ranges and sent/received filters.
+- Search partial phone numbers or email addresses.
+
 Local-first UI for searching your iMessage history. Sits on top of the macOS
 Messages database (`~/Library/Messages/chat.db`), caches messages into a local
 SQLite db, and exposes a fast search UI over them.
