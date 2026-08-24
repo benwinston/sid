@@ -6,7 +6,7 @@ What SID can search that Apple Messages can’t:
 
 - **Strict phrases in quotes:** searching `"happy birthday"` returns only that exact phrase.
 - **Message text only:** searching a name mentioned inside a message won’t also return every conversation or group chat associated with contacts having that name.
-- Combine phrase searches with exact date ranges and sent/received filters.
+- Search by Date Range or Sent/Received.
 - Search partial phone numbers or email addresses.
 
 Local-first UI for searching your iMessage history. Sits on top of the macOS
