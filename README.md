@@ -4,6 +4,7 @@ iMessage search that actually works.
 
 What SID can search that Apple Messages can’t:
 
+- **Full-string matching by default:** searching `hi` returns `hi`, not partial matches like `this`, `his`, or `hilarious`.
 - **Strict phrases in quotes:** searching `"happy birthday"` returns only that exact phrase.
 - **Message text only:** searching a name mentioned inside a message won’t also return every conversation or group chat associated with contacts having that name.
 - Search by Date Range or Sent/Received.
