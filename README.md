@@ -24,6 +24,12 @@ Apple Messages uses partial string matching. Searching for `hi` also returns
 messages containing words such as `this`, `his`, and `hilarious`, making it
 impossible to search specifically for the word `hi`.
 
+It also returns messages with no visible textual match at all. In the example
+below, searching for `loop` returns a message that does not contain `loop` or
+any partial match for it.
+
+<img src="docs/images/apple-messages-loop-false-positive.png" alt="Apple Messages returning a message with no textual match for loop" width="391">
+
 **Apple Messages results for `hi`:**
 
 <img src="docs/images/apple-messages-hi-partial-matches-1.png" alt="Apple Messages returning partial matches for hi, including this and his" width="420">
